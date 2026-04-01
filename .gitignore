@@ -1,0 +1,27 @@
+# Environment
+.env
+
+# Data volumes
+data/
+vault/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Audio models (large binary files — download separately)
+audio/sounds/*.wav
+!audio/sounds/generate_sounds.py
+
+# Pi assistant runtime
+/tmp/pi-assistant/
+
+# IDE
+.idea/
+.vscode/
+
+# Docker
+*.log
