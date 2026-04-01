@@ -1,0 +1,48 @@
+services:
+
+  orchestrator:
+    build: ./orchestrator
+    restart: unless-stopped
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - AGENT_URL=http://agent:8000
+      - USER_NAME=${USER_NAME:-Vlad}
+      - USER_LANGUAGES=${USER_LANGUAGES:-en,ro}
+      - DOCUMENTS_DIR=/documents
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - /tmp/pi-assistant:/tmp/pi-assistant
+      - ${DOCUMENTS_DIR:-/home/vlad/documents}:/documents
+    depends_on:
+      agent:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import httpx, os; httpx.get('http://localhost:8000/health', transport=httpx.HTTPTransport(uds='/tmp/pi-assistant/orchestrator.sock'))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - internal
+
+  agent:
+    build: ./agent
+    restart: unless-stopped
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DOCUMENTS_DIR=/documents
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ${DOCUMENTS_DIR:-/home/vlad/documents}:/documents
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import httpx; httpx.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
